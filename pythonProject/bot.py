@@ -1,7 +1,9 @@
 from dash import Dash, html, dash_table, dcc, callback, Output, Input
 import plotly.express as px
 import pandas as pd
+
 import matplotlib.pyplot as plt
+
 # from telegram import Bot
 import telebot
 from telebot import types
@@ -9,12 +11,12 @@ from telebot import types
 API_TOKEN = '7616140381:AAF62sq_h_ssG7tN---_rWQlXLRIe16izqA'
 CHAT_ID = '7616140381'
 
-score_sum = 0
+score_sum = 0               # Сумма баллов анкетирования
 
-credit_sum = 0
-credit_period=0
-interest_rate=0
-monthly_income=0
+credit_sum = 0              # Сумма кредита клиента
+T=0                         # Период кредитования
+i=0                         # Годовая процентаня ставка
+monthly_income=0            # Месячный доход клиента
 
 anketa_scores_list=[1,1,1,1]
 anketa_criterias_list = ['Возраст','Наличие детей','Доход','Семейное положение','Сфера деятельности','Квалификация','Стаж работы','Наличие домашнего телефона','Наличие автомобиля и марка']
@@ -46,21 +48,21 @@ def get_sum(message):
     bot.register_next_step_handler(message, get_period) #следующий шаг – функция get_name
 
 def get_period(message): #получаем фамилию
-    global credit_period
-    credit_period = int(message.text)
-    bot.send_message(message.from_user.id, 'Какова процентная ставка вашего кредита (%)?')
+    global T
+    T = int(message.text)
+    bot.send_message(message.from_user.id, 'Какова годовая процентная ставка вашего кредита (%)?')
     bot.register_next_step_handler(message, get_rate)
 
 def get_rate(message):
-    global interest_rate
-    interest_rate = int(message.text)
+    global i
+    i = int(message.text)
     bot.send_message(message.from_user.id,'Каков ваш месячный доход (руб./мес.)?')
     bot.register_next_step_handler(message, get_income)
 
 def get_income(message):
     global monthly_income
     monthly_income = int(message.text)
-    bot.send_message(message.from_user.id, 'Итак, ваши данные: '+str(credit_sum)+str(credit_period)+str(interest_rate)+str(monthly_income))
+    bot.send_message(message.from_user.id, 'Итак, ваши данные: '+str(credit_sum)+str(T)+str(i)+str(monthly_income))
     bot.send_message(message.from_user.id,
                      'Выши данные приняты. Для продолжения введите /next')
     bot.register_next_step_handler(message, anketa)
@@ -171,6 +173,360 @@ def anketa (message):
     key_auto_5 = types.InlineKeyboardButton(text='иномарка, новая', callback_data='inomarka, novaya')
     keyboard_auto.add(key_auto_5)
     bot.send_message(message.from_user.id, text='Наличие автомобиля и марка', reply_markup=keyboard_auto)
+
+    bot.send_message(message.from_user.id,
+                     'Для вывода диаграмм и результатов 1 этапа введите /graph_and_result_1')
+    bot.register_next_step_handler(message, graph_and_result_1)
+
+call_count=0
+@bot.callback_query_handler(func=lambda call: True)
+def callback_worker(call):
+    global score_sum
+    global anketa_scores_list
+
+    global call_count
+    if call_count==0:
+        anketa_scores_list.clear()
+        call_count+=1
+    else:
+        call_count+=1
+    # --------------------------------------------------------------------------------------------- Возраст
+    if call.data == '20-25':
+        score_sum += 100
+        anketa_scores_list.append(100) # добавление значения в массив для дашборда
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == '25-30':
+        score_sum += 107
+        anketa_scores_list.append(107)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == '30-60':
+        score_sum += 123
+        anketa_scores_list.append(123)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Наличие детей
+    if call.data == 'no':
+        score_sum+=100
+        anketa_scores_list.append(100)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'one':
+        score_sum+=90
+        anketa_scores_list.append(90)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'two':
+        score_sum+=80
+        anketa_scores_list.append(80)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'three':
+        score_sum+=70
+        anketa_scores_list.append(70)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'more then three':
+        score_sum+=30
+        anketa_scores_list.append(30)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Доход
+    if call.data == '-25':
+        score_sum += 130
+        anketa_scores_list.append(130) # добавление значения в массив для дашборда
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == '25-60':
+        score_sum += 145
+        anketa_scores_list.append(145)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == '60-':
+        score_sum += 160
+        anketa_scores_list.append(160)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Семейное положение
+    if call.data == 'lonely':
+        score_sum+=87
+        anketa_scores_list.append(87)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'married':
+        score_sum+=115
+        anketa_scores_list.append(115)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'married distinguished':
+        score_sum+=30
+        anketa_scores_list.append(30)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'divorced':
+        score_sum+=70
+        anketa_scores_list.append(70)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'widow':
+        score_sum+=65
+        anketa_scores_list.append(65)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Сфера деятельности
+    if call.data == 'gosudar':
+        score_sum+=124
+        anketa_scores_list.append(124)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'commertional':
+        score_sum+=93
+        anketa_scores_list.append(93)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'pensioner':
+        score_sum+=29
+        anketa_scores_list.append(29)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'another':
+        score_sum+=37
+        anketa_scores_list.append(37)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Квалификация
+    if call.data == 'no kvalif':
+        score_sum+=3
+        anketa_scores_list.append(3)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'service pers':
+        score_sum+=17
+        anketa_scores_list.append(17)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'special':
+        score_sum+=72
+        anketa_scores_list.append(72)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'sluzhasi':
+        score_sum+=83
+        anketa_scores_list.append(83)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'rukovod':
+        score_sum+=122
+        anketa_scores_list.append(122)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Стаж работы
+    if call.data == 'do odnogo goda':
+        score_sum+=6
+        anketa_scores_list.append(6)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'do dvuh let':
+        score_sum+=28
+        anketa_scores_list.append(28)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'do truh let':
+        score_sum+=51
+        anketa_scores_list.append(51)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'do pyati let':
+        score_sum+=62
+        anketa_scores_list.append(62)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'bolee pyati':
+        score_sum+=89
+        anketa_scores_list.append(89)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Наличие домашнего телефона
+    if call.data == 'est phone':
+        score_sum+=36
+        anketa_scores_list.append(36)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'no phone':
+        score_sum+=7
+        anketa_scores_list.append(7)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    # --------------------------------------------------------------------------------------------- Наличие автомобиля и марка
+    if call.data == 'no auto':
+        score_sum+=70
+        anketa_scores_list.append(70)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'otechestv, staraya':
+        score_sum+=7
+        anketa_scores_list.append(7)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'otechestv, novaya':
+        score_sum+=53
+        anketa_scores_list.append(53)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'inomarka, staraya':
+        score_sum+=60
+        anketa_scores_list.append(60)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+    elif call.data == 'inomarka, novaya':
+        score_sum+=115
+        anketa_scores_list.append(115)
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+
+
+
+    if call_count == 9:
+        bot.send_message(call.message.chat.id, 'Ваш скоринговый балл: ' + str(score_sum))
+
+    # url = 'http://127.0.0.1:8050'
+    # webbrowser.open(url)
+
+#----------------------------------------------------------------------------------------------------------------------- Создание Дашборда
+# df = pd.DataFrame({
+#         # "Date": ["2023-01-01", "2023-01-02", "2023-01-03"],
+#         # "Sales": [1000, 1200, 1500],
+#         # "Profit": [500, 600, 700]
+#         "criteria": anketa_criterias_list, # ['Возраст', 'Наличие детей','Доход','Семейное положение','Сфера деятельности'],
+#         "score":  anketa_scores_list # [100, 120, 140, 170, 220]
+#
+#     })
+#
+# # Создание Dash-приложения
+# app = Dash(__name__)
+#
+# # Добавление интерфейса дашборда
+# app.layout = html.Div([
+#     html.H1("Распределение баллов"),
+#     dcc.Graph(figure=px.pie(df, names="criteria", values="score", title='Анкета')),
+# ])
+
+
+
+#----------------------------------------------------------------------------------------------------------------------- Вывод Дашборда
+try:
+    def graph_and_result_1(message):
+        # -------------------------------------------------------------------------------------- Сохранение дашборда как картинки
+        # Save plot as image          # Закинуто в функцию, чтобы изменились элементы массива в calllback
+        # В противном случае, находясь в основном потоке, значения используются те, что были при объявлении
+
+        plt.pie(anketa_scores_list, labels=anketa_criterias_list, autopct='%1.1f%%')
+        plt.title('Распределение баллов (в долях) по критериям')  # нахвание графика
+        plt.savefig('pie.png')
+        plt.close()
+
+        file_1 = open('.venv/pie.png', 'rb')
+        bot.send_photo(message.from_user.id, file_1)
+
+        plt.bar(anketa_criterias_list, anketa_scores_list)
+        plt.title('Распределение баллов по критериям')  # нахвание графика
+        plt.savefig('histogram.png')
+        plt.close()
+
+        file_2 = open('.venv/histogram.png', 'rb')
+        bot.send_photo(message.from_user.id, file_2)
+        # bot.close()
+
+        if score_sum > 620:
+            bot.send_message(message.from_user.id, 'Вы прошли первый этап. Для продолжения введите /next')
+            bot.register_next_step_handler(message, expenses_data)
+        else:
+            bot.send_message(message.from_user.id, 'К сожалению, вы не смогли пройти первый этап')
+except UserWarning:
+    score_sum=score_sum+1-1
+
+#----------------------------------------------------------------------------------------------------------------------- 2 этап скоринга
+max_score=0
+TD=0
+OD=0
+SD=0
+K=0
+E=[]
+P=0
+
+def expenses_data(message):
+    global max_score
+    global TD
+    global OD
+    global SD
+    global K
+    global E
+    global P
+
+    max_score = (123 + 100 + 160 + 115 + 124 + 122 + 89 + 36 + 115)  # Максимальный скориинговый балл
+    if monthly_income == 0:
+        print('line 415', i, T, monthly_income)
+        exit()
+    TD = float(monthly_income) * 0.6  # Текущий доход
+    OD = TD * (score_sum / max_score)  # Ожидаемый доход
+    SD = 0  # Свободный доход
+    K = 0  # Коэффициент минимальных расходов, зависящий от количества членов семьи физического лица
+    E = []  # Массив фиксированных платежей (аренда жилья, образование и т.п.)
+    P = 0  # Ежемесячный платёж по кредиту
+
+
+    bot.send_message(message.from_user.id, 'Приступаем ко второму этапу скоринговой оценки.')
+    bot.send_message(message.from_user.id, 'Укажите количество членов семьи, проживающих совместно с вами')
+    bot.register_next_step_handler(message, get_k)
+
+def get_k(message):
+    global K
+    K = int(message.text)
+    if K==0:
+        K=0.3
+    elif K==1:
+        K=0.35
+    elif K==2:
+        K=0.4
+    elif K==3:
+        K=0.45
+    elif K==4:
+        K=0.5
+    elif K>=5:
+        K=0.7
+    bot.send_message(message.from_user.id, 'Укажите ежемесячные фиксированные платежи вашей семьи (в руб.)')
+    bot.send_message(message.from_user.id, '1) Арендные платежи')
+    bot.register_next_step_handler(message, get_arenda)
+
+def get_arenda(message):
+    global E
+    E.append(int(message.text))
+    bot.send_message(message.from_user.id, '2) Платежи по кредитам')
+    bot.register_next_step_handler(message, get_credits)
+
+def get_credits(message):
+    global E
+    E.append(int(message.text))
+    bot.send_message(message.from_user.id, '3) Платежи за образование')
+    bot.register_next_step_handler(message, get_education)
+
+def get_education(message):
+    global E
+    E.append(int(message.text))
+    bot.send_message(message.from_user.id, '4) Алименты')
+    bot.register_next_step_handler(message, get_aliments)
+
+def get_aliments(message):
+    global E
+    E.append(int(message.text))
+    bot.send_message(message.from_user.id, '5) Почие')
+    bot.register_next_step_handler(message, get_another)
+
+def get_another(message):
+    global E
+    E.append(int(message.text))
+    bot.send_message(message.from_user.id, 'Для продолжения введите /next')
+    bot.register_next_step_handler(message, income_calculation)
+
+def income_calculation(message):
+    global SD
+    global OD
+    global E
+    SD = OD * (1.0 - K)-float(sum(E))
+    bot.send_message(message.from_user.id, 'SD= ' + str(SD)+'   OD= ' + str(OD) + '   K= '+ str(K) + '   E= ' + str(float(sum(E))) +'   TD= ' + str(TD) +'   monthly_income= '+ str(monthly_income)  )
+    bot.send_message(message.from_user.id, 'Укажите вашу схему кредитования: 1. Аннуитетная 2. Дифференцированная (ввести номер)')
+    bot.register_next_step_handler(message, payment_calculation)
+
+def payment_calculation(message):
+    global P
+    global i
+    global T
+    i/=100
+    if message.text=='1':
+        P = credit_sum*( (i/12)/(1 - (1+i/12)**(-T) )  )   # расчёт аннуитетного платежа
+    elif message.text == '2':
+        P = credit_sum/T + credit_sum*i/12   # расчёт максимального дифференцированного платежа
+    bot.send_message(message.from_user.id, 'Для вывода графиков и результатов 2 этапа введите /graph_and_result_2')
+    bot.register_next_step_handler(message, graph_and_result_2)
+
+def graph_and_result_2(message):
+    # ... графики
+    global SD
+    global P
+    if SD>=P:
+        bot.send_message(message.from_user.id, 'Вы прошли 2 этап скоринговой оценки. Теперь вы признаётесь кредитоспособным клиентом для банка')
+    else:
+        bot.send_message(message.from_user.id, 'К сожалению, вы не прошли 2 этап скоринговой оценки')
+
+    bot.send_message(message.from_user.id, 'Ваш свободный доход: ' + str(SD))
+    bot.send_message(message.from_user.id, 'Ваш ежемесячный платёж по кредиту: ' + str(P))
+
+
+
 
 bot.polling(none_stop=True, interval=0)
 
