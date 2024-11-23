@@ -71,4 +71,4 @@ def get_income(message):
 
 ```
 ## Контактная информация
-Ссылка на [профиль GitHub]()
+Ссылка на [профиль GitHub](https://github.com/tehnolize/Telegram-bot.git)
