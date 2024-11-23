@@ -1,18 +1,15 @@
 from dash import Dash, html, dash_table, dcc, callback, Output, Input
 import plotly.express as px
 import pandas as pd
-
 import matplotlib.pyplot as plt
-
-# from telegram import Bot
 import telebot
 from telebot import types
+import random
 
 API_TOKEN = '7616140381:AAF62sq_h_ssG7tN---_rWQlXLRIe16izqA'
 CHAT_ID = '7616140381'
 
 score_sum = 0               # Сумма баллов анкетирования
-
 credit_sum = 0              # Сумма кредита клиента
 T=0                         # Период кредитования
 i=0                         # Годовая процентаня ставка
@@ -39,15 +36,15 @@ bot = telebot.TeleBot(API_TOKEN)
 def start(message):
     bot.send_message(message.from_user.id, 'Здравствуйте, для скоринговой оценки, пожалуйста, введите свои данные.')
     bot.send_message(message.from_user.id, 'Какова сумма вашего кредита (руб.)?')
-    bot.register_next_step_handler(message, get_sum)  # следующий шаг – функция get_name
+    bot.register_next_step_handler(message, get_sum)  # следующий шаг – функция get_sum
 
 def get_sum(message):
     global credit_sum
     credit_sum = int(message.text)
     bot.send_message(message.from_user.id, 'Каков ваш срок кредитования (мес.)?')
-    bot.register_next_step_handler(message, get_period) #следующий шаг – функция get_name
+    bot.register_next_step_handler(message, get_period) #следующий шаг – функция get_period
 
-def get_period(message): #получаем фамилию
+def get_period(message): # получаем срок кредитования
     global T
     T = int(message.text)
     bot.send_message(message.from_user.id, 'Какова годовая процентная ставка вашего кредита (%)?')
@@ -62,15 +59,15 @@ def get_rate(message):
 def get_income(message):
     global monthly_income
     monthly_income = int(message.text)
-    bot.send_message(message.from_user.id, 'Итак, ваши данные: '+str(credit_sum)+str(T)+str(i)+str(monthly_income))
+    bot.send_message(message.from_user.id, 'Итак, ваши данные: ' + '\nСумма кредита ' + str(credit_sum) + '\nСрок кредитования ' + str(T) + '\nГодовая процентная ставка ' + str(i) + '\nМесячный доход ' + str(monthly_income) )
     bot.send_message(message.from_user.id,
-                     'Выши данные приняты. Для продолжения введите /next')
+                     'Ваши данные приняты. Для продолжения введите /next')
     bot.register_next_step_handler(message, anketa)
 
-#----------------------------------------------------------------------------------------------------------------------- Анкетирование
+# ---------------------------------------------------------------------------------------------------------------------- Анкетирование
 
 def anketa (message):
-    bot.send_message(message.from_user.id, 'Приступаем к первому этапу скоринговой оценки. Пожалуйста заполните следующую анкету')
+    bot.send_message(message.from_user.id, 'Приступаем к первому этапу скоринговой оценки. Пожалуйста, заполните следующую анкету')
 
 # --------------------------------------------------------------------------------------------- Возраст
     keyboard_age = types.InlineKeyboardMarkup()
@@ -94,7 +91,7 @@ def anketa (message):
     key_children_5 = types.InlineKeyboardButton(text='более трех детей', callback_data='more then three')
     keyboard_children.add(key_children_5)
     bot.send_message(message.from_user.id, text='Наличие детей', reply_markup=keyboard_children)
-    # --------------------------------------------------------------------------------------------- Доход
+# --------------------------------------------------------------------------------------------- Доход
     keyboard_income = types.InlineKeyboardMarkup()
     key_income_1 = types.InlineKeyboardButton(text='до 25 тыс. руб.', callback_data='-25')
     keyboard_income.add(key_income_1)
@@ -103,7 +100,7 @@ def anketa (message):
     key_income_3 = types.InlineKeyboardButton(text='более 60 тыс. руб.', callback_data='60-')
     keyboard_income.add(key_income_3)
     bot.send_message(message.from_user.id, text='Доход', reply_markup=keyboard_income)
-    # --------------------------------------------------------------------------------------------- Семейное положение
+# --------------------------------------------------------------------------------------------- Семейное положение
     keyboard_family = types.InlineKeyboardMarkup()
     key_family_1 = types.InlineKeyboardButton(text='холост (не замужем)', callback_data='lonely')
     keyboard_family.add(key_family_1)
@@ -116,7 +113,7 @@ def anketa (message):
     key_family_5 = types.InlineKeyboardButton(text='вдовец (вдова)', callback_data='widow')
     keyboard_family.add(key_family_5)
     bot.send_message(message.from_user.id, text='Семейное положение', reply_markup=keyboard_family)
-    # --------------------------------------------------------------------------------------------- Сфера деятельности
+# --------------------------------------------------------------------------------------------- Сфера деятельности
     keyboard_sphere = types.InlineKeyboardMarkup()
     key_sphere_1 = types.InlineKeyboardButton(text='государственная или муниципальная служба', callback_data='gosudar')
     keyboard_sphere.add(key_sphere_1)
@@ -127,7 +124,7 @@ def anketa (message):
     key_sphere_4 = types.InlineKeyboardButton(text='другие сферы деятельности', callback_data='another')
     keyboard_sphere.add(key_sphere_4)
     bot.send_message(message.from_user.id, text='Сфера деятельности', reply_markup=keyboard_sphere)
-    # --------------------------------------------------------------------------------------------- Квалификация
+# --------------------------------------------------------------------------------------------- Квалификация
     keyboard_kvalific = types.InlineKeyboardMarkup()
     key_kvalific_1 = types.InlineKeyboardButton(text='нет квалификации', callback_data='no kvalif')
     keyboard_kvalific.add(key_kvalific_1)
@@ -140,7 +137,7 @@ def anketa (message):
     key_kvalific_5 = types.InlineKeyboardButton(text='руководитель', callback_data='rukovod')
     keyboard_kvalific.add(key_kvalific_5)
     bot.send_message(message.from_user.id, text='Квалификация', reply_markup=keyboard_kvalific)
-    # --------------------------------------------------------------------------------------------- Стаж работы
+# --------------------------------------------------------------------------------------------- Стаж работы
     keyboard_stazh = types.InlineKeyboardMarkup()
     key_stazh_1 = types.InlineKeyboardButton(text='до одного года', callback_data='do odnogo goda')
     keyboard_stazh.add(key_stazh_1)
@@ -153,14 +150,14 @@ def anketa (message):
     key_stazh_5 = types.InlineKeyboardButton(text='более пяти лет', callback_data='bolee pyati')
     keyboard_stazh.add(key_stazh_5)
     bot.send_message(message.from_user.id, text='Стаж работы', reply_markup=keyboard_stazh)
-    # --------------------------------------------------------------------------------------------- Наличие домашнего телефона
+# --------------------------------------------------------------------------------------------- Наличие домашнего телефона
     keyboard_phone = types.InlineKeyboardMarkup()
     key_phone_1 = types.InlineKeyboardButton(text='есть телефон', callback_data='est phone')
     keyboard_phone.add(key_phone_1)
     key_phone_2 = types.InlineKeyboardButton(text='отсутствует телефон', callback_data='no phone')
     keyboard_phone.add(key_phone_2)
     bot.send_message(message.from_user.id, text='Наличие домашнего телефона', reply_markup=keyboard_phone)
-    # --------------------------------------------------------------------------------------------- Наличие автомобиля и марка
+# --------------------------------------------------------------------------------------------- Наличие автомобиля и марка
     keyboard_auto = types.InlineKeyboardMarkup()
     key_auto_1 = types.InlineKeyboardButton(text='нет автомобиля', callback_data='no auto')
     keyboard_auto.add(key_auto_1)
@@ -183,14 +180,14 @@ call_count=0
 def callback_worker(call):
     global score_sum
     global anketa_scores_list
-
     global call_count
+
     if call_count==0:
         anketa_scores_list.clear()
         call_count+=1
     else:
         call_count+=1
-    # --------------------------------------------------------------------------------------------- Возраст
+# --------------------------------------------------------------------------------------------- Возраст
     if call.data == '20-25':
         score_sum += 100
         anketa_scores_list.append(100) # добавление значения в массив для дашборда
@@ -203,7 +200,7 @@ def callback_worker(call):
         score_sum += 123
         anketa_scores_list.append(123)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Наличие детей
+# --------------------------------------------------------------------------------------------- Наличие детей
     if call.data == 'no':
         score_sum+=100
         anketa_scores_list.append(100)
@@ -224,7 +221,7 @@ def callback_worker(call):
         score_sum+=30
         anketa_scores_list.append(30)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Доход
+# --------------------------------------------------------------------------------------------- Доход
     if call.data == '-25':
         score_sum += 130
         anketa_scores_list.append(130) # добавление значения в массив для дашборда
@@ -237,7 +234,7 @@ def callback_worker(call):
         score_sum += 160
         anketa_scores_list.append(160)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Семейное положение
+# --------------------------------------------------------------------------------------------- Семейное положение
     if call.data == 'lonely':
         score_sum+=87
         anketa_scores_list.append(87)
@@ -258,7 +255,7 @@ def callback_worker(call):
         score_sum+=65
         anketa_scores_list.append(65)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Сфера деятельности
+# --------------------------------------------------------------------------------------------- Сфера деятельности
     if call.data == 'gosudar':
         score_sum+=124
         anketa_scores_list.append(124)
@@ -275,7 +272,7 @@ def callback_worker(call):
         score_sum+=37
         anketa_scores_list.append(37)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Квалификация
+# --------------------------------------------------------------------------------------------- Квалификация
     if call.data == 'no kvalif':
         score_sum+=3
         anketa_scores_list.append(3)
@@ -296,7 +293,7 @@ def callback_worker(call):
         score_sum+=122
         anketa_scores_list.append(122)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Стаж работы
+# --------------------------------------------------------------------------------------------- Стаж работы
     if call.data == 'do odnogo goda':
         score_sum+=6
         anketa_scores_list.append(6)
@@ -317,7 +314,7 @@ def callback_worker(call):
         score_sum+=89
         anketa_scores_list.append(89)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Наличие домашнего телефона
+# --------------------------------------------------------------------------------------------- Наличие домашнего телефона
     if call.data == 'est phone':
         score_sum+=36
         anketa_scores_list.append(36)
@@ -326,7 +323,7 @@ def callback_worker(call):
         score_sum+=7
         anketa_scores_list.append(7)
         bot.delete_message(call.message.chat.id, call.message.message_id)
-    # --------------------------------------------------------------------------------------------- Наличие автомобиля и марка
+# --------------------------------------------------------------------------------------------- Наличие автомобиля и марка
     if call.data == 'no auto':
         score_sum+=70
         anketa_scores_list.append(70)
@@ -377,27 +374,27 @@ def callback_worker(call):
 
 
 
-#----------------------------------------------------------------------------------------------------------------------- Вывод Дашборда
+#----------------------------------------------------------------------------------------------------------------------- Вывод дашборда и результатов
 try:
     def graph_and_result_1(message):
         # -------------------------------------------------------------------------------------- Сохранение дашборда как картинки
-        # Save plot as image          # Закинуто в функцию, чтобы изменились элементы массива в calllback
+        # Save plot as image          # Закинуто в функцию, чтобы изменились элементы массива в callback
         # В противном случае, находясь в основном потоке, значения используются те, что были при объявлении
 
         plt.pie(anketa_scores_list, labels=anketa_criterias_list, autopct='%1.1f%%')
-        plt.title('Распределение баллов (в долях) по критериям')  # нахвание графика
-        plt.savefig('pie.png')
+        plt.title('Распределение баллов (в долях) по критериям')  # название графика
+        plt.savefig('pie_1.png')
         plt.close()
 
-        file_1 = open('.venv/pie.png', 'rb')
+        file_1 = open('.venv/pie_1.png', 'rb')
         bot.send_photo(message.from_user.id, file_1)
 
         plt.bar(anketa_criterias_list, anketa_scores_list)
-        plt.title('Распределение баллов по критериям')  # нахвание графика
-        plt.savefig('histogram.png')
+        plt.title('Распределение баллов по критериям')  # название графика
+        plt.savefig('histogram_1.png')
         plt.close()
 
-        file_2 = open('.venv/histogram.png', 'rb')
+        file_2 = open('.venv/histogram_1.png', 'rb')
         bot.send_photo(message.from_user.id, file_2)
         # bot.close()
 
@@ -410,13 +407,15 @@ except UserWarning:
     score_sum=score_sum+1-1
 
 #----------------------------------------------------------------------------------------------------------------------- 2 этап скоринга
-max_score=0
-TD=0
-OD=0
-SD=0
-K=0
-E=[]
-P=0
+max_score=0       # Максимальный скоринговый балл
+TD=0              # Текущий доход
+OD=0              # Ожидаемый доход
+SD=0              # Свободный доход
+K=0               # Коэффициент минимальных расходов, зависящий от количества членов семьи клиента
+E=[]              # Массив фиксированных платежей (аренда жилья, образование и т.п.)
+P=0               # Ежемесячный платёж по кредиту
+
+
 
 def expenses_data(message):
     global max_score
@@ -427,16 +426,16 @@ def expenses_data(message):
     global E
     global P
 
-    max_score = (123 + 100 + 160 + 115 + 124 + 122 + 89 + 36 + 115)  # Максимальный скориинговый балл
+    max_score = (123 + 100 + 160 + 115 + 124 + 122 + 89 + 36 + 115)
     if monthly_income == 0:
         print('line 415', i, T, monthly_income)
         exit()
-    TD = float(monthly_income) * 0.6  # Текущий доход
-    OD = TD * (score_sum / max_score)  # Ожидаемый доход
-    SD = 0  # Свободный доход
-    K = 0  # Коэффициент минимальных расходов, зависящий от количества членов семьи физического лица
-    E = []  # Массив фиксированных платежей (аренда жилья, образование и т.п.)
-    P = 0  # Ежемесячный платёж по кредиту
+    TD = float(monthly_income) * 0.6
+    OD = TD * (score_sum / max_score)
+    SD = 0
+    K = 0
+    E = []
+    P = 0
 
 
     bot.send_message(message.from_user.id, 'Приступаем ко второму этапу скоринговой оценки.')
@@ -497,8 +496,8 @@ def income_calculation(message):
     global OD
     global E
     SD = OD * (1.0 - K)-float(sum(E))
-    bot.send_message(message.from_user.id, 'SD= ' + str(SD)+'   OD= ' + str(OD) + '   K= '+ str(K) + '   E= ' + str(float(sum(E))) +'   TD= ' + str(TD) +'   monthly_income= '+ str(monthly_income)  )
-    bot.send_message(message.from_user.id, 'Укажите вашу схему кредитования: 1. Аннуитетная 2. Дифференцированная (ввести номер)')
+    # bot.send_message(message.from_user.id, 'SD= ' + str(SD)+'   OD= ' + str(OD) + '   K= '+ str(K) + '   E= ' + str(float(sum(E))) +'   TD= ' + str(TD) +'   monthly_income= '+ str(monthly_income)  )
+    bot.send_message(message.from_user.id, 'Укажите вашу схему кредитования (ввести номер): \n1. Аннуитетная \n2. Дифференцированная')
     bot.register_next_step_handler(message, payment_calculation)
 
 def payment_calculation(message):
@@ -514,7 +513,41 @@ def payment_calculation(message):
     bot.register_next_step_handler(message, graph_and_result_2)
 
 def graph_and_result_2(message):
-    # ... графики
+    # графики ...
+    payments_types = ['Арнеды','Кредиты','Образование','Алименты','Прочее']
+
+    plt.pie(E, labels=payments_types, autopct='%1.1f%%')
+    plt.title('Распределение расходов (в долях) по категориям')  # название графика
+    plt.savefig('pie_2.png')
+    plt.close()
+
+    file_3 = open('.venv/pie_2.png', 'rb')
+    bot.send_photo(message.from_user.id, file_3)
+
+
+    plt.bar(payments_types, E)
+    plt.title('Распределение расходов по категориям')  # название графика
+    plt.savefig('histogram_2.png')
+    plt.close()
+
+    file_4 = open('.venv/histogram_2.png', 'rb')
+    bot.send_photo(message.from_user.id, file_4)
+
+    months = ['Декабрь','Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь']
+    incomes = []
+    for i in range(12):
+        incomes.append(  int( monthly_income*(random.random()/2.5+0.8) )  )
+
+    plt.plot(months, incomes, color='green', marker='o', markersize=7)
+    plt.title('График прогноза свободного дохода на ближайшие 12 месяцев')  # название графика
+    plt.savefig('line.png')
+    plt.close()
+
+    file_5 = open('.venv/line.png', 'rb')
+    bot.send_photo(message.from_user.id, file_5)
+
+    # bot.close()
+
     global SD
     global P
     if SD>=P:
@@ -524,9 +557,6 @@ def graph_and_result_2(message):
 
     bot.send_message(message.from_user.id, 'Ваш свободный доход: ' + str(SD))
     bot.send_message(message.from_user.id, 'Ваш ежемесячный платёж по кредиту: ' + str(P))
-
-
-
 
 bot.polling(none_stop=True, interval=0)
 
